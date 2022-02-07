@@ -12,6 +12,7 @@
   - `pip install pyautogui`
   - `pip install Pillow --upgrade`
   - `pip install ahk`
+  - `pip install keyboard`
 - Run Application
   - `export QT_DEBUG_PLUGINS=1` (Debug)
   - `python read.py`

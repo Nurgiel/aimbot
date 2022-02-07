@@ -1,10 +1,12 @@
 import cv2 as cv
 import numpy as np
 import pyautogui
-from ahk import AHK
+from ahk import AHK, Hotkey
+import keyboard
 
+# ahk = AHK()
 ahk = AHK(executable_path='C:\\programy\\AutoHotkey.exe')
-
+font = cv.FONT_HERSHEY_SCRIPT_COMPLEX
 
 def rescaleFrame(frame, scale=0.35):
     width = int(frame.shape[1] * scale)
@@ -32,66 +34,59 @@ def get_xy_list_from_contour(contours):
 
 
 
-def init():
-    font = cv.FONT_HERSHEY_SCRIPT_COMPLEX
+def auto():
     while(True):
-        img = cv.cvtColor(np.array(pyautogui.screenshot()), cv.COLOR_BGR2RGB)
+        attackLowestHealthMinion()
+
+        cv.waitKey(100)
         
-        # mask = cv.inRange(img, np.array([208, 149, 77]), np.array([208, 149, 77]))
-        # output = cv.bitwise_or(output, cv.bitwise_and(img, img, mask = mask))
+        if keyboard.is_pressed('Esc'):
+            print('You Pressed Escape!')
+            break
 
-        # mask = cv.inRange(img, np.array([24, 36, 148]), np.array([24, 36, 148]))
-        # output = cv.bitwise_or(output, cv.bitwise_and(img, img, mask = mask))
-
-        mask = cv.inRange(img, np.array([91, 91, 200]), np.array([91, 91, 200]))
-        output = cv.bitwise_and(img, img, mask = mask)
-        grayscale = cv.cvtColor(output, cv.COLOR_BGR2GRAY)
-        # _, thresh = cv.threshold(grayscale, 240, 255, cv.THRESH_BINARY)
-        _, thresh = cv.threshold(grayscale, 240, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)
-        contours, _ = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
-
-        # print(get_xy_list_from_contour(contours))
-
-        # print(contours[0][1])
-
-        for c in contours:
-            approx = cv.approxPolyDP(c, 0.01*cv.arcLength(c, True), True)
-            cv.drawContours(output, [approx], 0, (0, 255, 0), 5)
-            n = approx.ravel()
-            x = n[0]
-            y = n[1]
-            string = str(x) + " " + str(y) 
-            cv.putText(output, string, (x, y - 6), font, 0.4, (0, 255, 255)) 
+def attackLowestHealthMinion():
+    img = cv.cvtColor(np.array(pyautogui.screenshot()), cv.COLOR_BGR2RGB)
         
-        # ahk.click(x, y)
+    # mask = cv.inRange(img, np.array([208, 149, 77]), np.array([208, 149, 77]))
+    # output = cv.bitwise_or(output, cv.bitwise_and(img, img, mask = mask))
 
-        # Used to flatted the array containing 
-        # the co-ordinates of the vertices. 
-        # n = approx.ravel() 
-        # i = 0
+    # mask = cv.inRange(img, np.array([24, 36, 148]), np.array([24, 36, 148]))
+    # output = cv.bitwise_or(output, cv.bitwise_and(img, img, mask = mask))
 
-        # for j in n : 
-        #     if(i % 2 == 0): 
-        #         x = n[i] 
-        #         y = n[i + 1] 
+    mask = cv.inRange(img, np.array([91, 91, 200]), np.array([91, 91, 200]))
+    output = cv.bitwise_and(img, img, mask = mask)
+    grayscale = cv.cvtColor(output, cv.COLOR_BGR2GRAY)
 
-        #         # String containing the co-ordinates. 
-        
+    # _, thresh = cv.threshold(grayscale, 240, 255, cv.THRESH_BINARY)
+    _, thresh = cv.threshold(grayscale, 240, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)
+    contours, _ = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
 
-        #         if(i == 0): 
-        #             # text on topmost co-ordinate. 
-        #             cv.putText(output, "Arrow tip", (x, y), 
-        #                             font, 0.5, (255, 0, 0)) 
-        #         else: 
-        #             # text on remaining co-ordinates. 
-        #             cv.putText(output, string, (x, y), 
-        #                     font, 0.5, (0, 255, 0)) 
-        #     i = i + 1
+    # print(get_xy_list_from_contour(contours))
 
-        cv.imshow("AimBot", output)
-        cv.waitKey(1000)
+    # print(contours[0][1])
 
-init()
+    lowest_hp = 300
+    for contour in contours:    
+        approx = cv.approxPolyDP(contour, 0.01 * cv.arcLength(contour, True), True)
+        x, y, _, _ = cv.boundingRect(contour)
+        l = cv.arcLength(contour,True)
+        if l < lowest_hp:
+            lowest_hp = l
+            lowest_hp_x = x
+            lowest_hp_y = y
+
+        cv.drawContours(output, [approx], 0, (0, 255, 0), 5)
+    
+    if x and y:
+        ahk.right_click(lowest_hp_x + 20, lowest_hp_y + 25)
+
+    cv.imshow("AimBot", output)
+
+# keyboard.add_hotkey('CapsLock', print, args = ('Hotkey', 'Detected')) 
+keyboard.add_hotkey('CapsLock', attackLowestHealthMinion) 
+keyboard.wait('ctrl + esc')
+
+# init()
 
 
 
