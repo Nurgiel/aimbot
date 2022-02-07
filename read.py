@@ -1,7 +1,8 @@
+from turtle import pos
 import cv2 as cv
 import numpy as np
 import pyautogui
-from ahk import AHK, Hotkey
+from ahk import AHK
 import keyboard
 
 # ahk = AHK()
@@ -36,7 +37,7 @@ def get_xy_list_from_contour(contours):
 
 def auto():
     while(True):
-        attackLowestHealthMinion()
+        attackLowestHealthMinionOrEnemy()
 
         cv.waitKey(100)
         
@@ -44,17 +45,12 @@ def auto():
             print('You Pressed Escape!')
             break
 
-def attackLowestHealthMinion():
+def attackLowestHealthMinionOrEnemy():
     img = cv.cvtColor(np.array(pyautogui.screenshot()), cv.COLOR_BGR2RGB)
-        
-    # mask = cv.inRange(img, np.array([208, 149, 77]), np.array([208, 149, 77]))
-    # output = cv.bitwise_or(output, cv.bitwise_and(img, img, mask = mask))
-
-    # mask = cv.inRange(img, np.array([24, 36, 148]), np.array([24, 36, 148]))
-    # output = cv.bitwise_or(output, cv.bitwise_and(img, img, mask = mask))
-
     mask = cv.inRange(img, np.array([91, 91, 200]), np.array([91, 91, 200]))
     output = cv.bitwise_and(img, img, mask = mask)
+    mask = cv.inRange(img, np.array([24, 36, 148]), np.array([24, 36, 148]))
+    output = cv.bitwise_or(output, cv.bitwise_and(img, img, mask = mask))
     grayscale = cv.cvtColor(output, cv.COLOR_BGR2GRAY)
 
     # _, thresh = cv.threshold(grayscale, 240, 255, cv.THRESH_BINARY)
@@ -65,35 +61,46 @@ def attackLowestHealthMinion():
 
     # print(contours[0][1])
 
-    lowest_hp = 300
+    lowest_hp = 300000
     for contour in contours:    
         approx = cv.approxPolyDP(contour, 0.01 * cv.arcLength(contour, True), True)
         x, y, _, _ = cv.boundingRect(contour)
         l = cv.arcLength(contour,True)
+        M = cv.moments(contour)
         if l < lowest_hp:
             lowest_hp = l
-            lowest_hp_x = x
-            lowest_hp_y = y
+            cx = int(M['m10']/M['m00'])
+            cy = int(M['m01']/M['m00'])
 
         cv.drawContours(output, [approx], 0, (0, 255, 0), 5)
     
     if x and y:
-        ahk.right_click(lowest_hp_x + 20, lowest_hp_y + 25)
+        position = pyautogui.position()
+        # ahk.right_click(cx + 15, cy + 25)
+        pyautogui.click(x = cx + 25, y = cy + 45, button='right')
+        pyautogui.moveTo(position, _pause=False)
+        # ahk.mouse_move(position)
 
-    cv.imshow("AimBot", output)
+
+    # DEBUG
+    # cv.imshow("AimBot", output)
 
 # keyboard.add_hotkey('CapsLock', print, args = ('Hotkey', 'Detected')) 
-keyboard.add_hotkey('CapsLock', attackLowestHealthMinion) 
-keyboard.wait('ctrl + esc')
+keyboard.add_hotkey('s', attackLowestHealthMinionOrEnemy, suppress=True)
+# cv.waitKey(1000)
+keyboard.wait('ctrl + x')
 
-# init()
+# >>> import pyautogui
+
+# >>> pyautogui.position()
+# (845, 554)
 
 
+# auto()
 
 
-
+# friendly minions
 # mask = cv.inRange(img, np.array([208, 149, 77]), np.array([208, 149, 77]))
-# output = cv.bitwise_or(output, cv.bitwise_and(img, img, mask = mask))
 
 # mask = cv.inRange(img, np.array([24, 36, 148]), np.array([24, 36, 148]))
 # output = cv.bitwise_or(output, cv.bitwise_and(img, img, mask = mask))
@@ -158,3 +165,47 @@ keyboard.wait('ctrl + esc')
 # cam = cv.VideoCapture(0)
 # playVideo(cam)
 # cam.release()
+
+
+
+
+
+
+
+
+
+
+
+
+# def attackClosestHero():
+#     img = cv.cvtColor(np.array(pyautogui.screenshot()), cv.COLOR_BGR2RGB)
+#     mask = cv.inRange(img, np.array([24, 36, 148]), np.array([24, 36, 148]))
+#     output = cv.bitwise_and(img, img, mask = mask)
+#     grayscale = cv.cvtColor(output, cv.COLOR_BGR2GRAY)
+#     _, thresh = cv.threshold(grayscale, 240, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)
+#     contours, _ = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+#     lowest_hp = 300
+
+#     for contour in contours:
+#         x, y, _, _ = cv.boundingRect(contour)
+#         l = cv.arcLength(contour, True)
+#         M = cv.moments(contour)
+#         if M['m00'] != 0:
+#             cx = int(M['m10']/M['m00'])
+#             cy = int(M['m01']/M['m00'])
+#         if l < lowest_hp:
+#             lowest_hp = l
+#             lowest_hp_x = x
+#             lowest_hp_y = y
+        
+
+#         # print(f"x: {cx} y: {cy}")
+
+#         # cv.drawContours(output, [approx], 0, (0, 255, 0), 5)
+    
+#     if x and y:
+#         # ahk.right_click(lowest_hp_x + 25, lowest_hp_y + 120)
+#         ahk.right_click(cx, cy)
+
+# keyboard.add_hotkey('s', attackClosestHero, suppress=True)
+
