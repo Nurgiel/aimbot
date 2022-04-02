@@ -1,4 +1,3 @@
-from turtle import pos
 import cv2 as cv
 import numpy as np
 import pyautogui
@@ -8,6 +7,7 @@ import keyboard
 # ahk = AHK()
 ahk = AHK(executable_path='C:\\programy\\AutoHotkey.exe')
 font = cv.FONT_HERSHEY_SCRIPT_COMPLEX
+output = ''
 
 def rescaleFrame(frame, scale=0.35):
     width = int(frame.shape[1] * scale)
@@ -85,10 +85,56 @@ def attackLowestHealthMinionOrEnemy():
     # DEBUG
     # cv.imshow("AimBot", output)
 
+def Overwatch():
+    img = cv.cvtColor(np.array(pyautogui.screenshot()), cv.COLOR_BGR2RGB)
+    mask = cv.inRange(img, np.array([91, 91, 200]), np.array([91, 91, 200]))
+    output = cv.bitwise_and(img, img, mask = mask)
+    mask = cv.inRange(img, np.array([24, 36, 148]), np.array([24, 36, 148]))
+    output = cv.bitwise_or(output, cv.bitwise_and(img, img, mask = mask))
+    grayscale = cv.cvtColor(output, cv.COLOR_BGR2GRAY)
+
+    # _, thresh = cv.threshold(grayscale, 240, 255, cv.THRESH_BINARY)
+    _, thresh = cv.threshold(grayscale, 240, 255, cv.THRESH_BINARY_INV + cv.THRESH_OTSU)
+    contours, _ = cv.findContours(thresh, cv.RETR_TREE, cv.CHAIN_APPROX_NONE)
+
+    # print(get_xy_list_from_contour(contours))
+
+    # print(contours[0][1])
+
+    lowest_hp = 300000
+    for contour in contours:    
+        approx = cv.approxPolyDP(contour, 0.01 * cv.arcLength(contour, True), True)
+        x, y, _, _ = cv.boundingRect(contour)
+        l = cv.arcLength(contour,True)
+        M = cv.moments(contour)
+        if l < lowest_hp:
+            lowest_hp = l
+            cx = int(M['m10']/M['m00'])
+            cy = int(M['m01']/M['m00'])
+
+        cv.drawContours(output, [approx], 0, (0, 255, 0), 5)
+        # cv.imshow("AimBot", output)
+    
+    if x and y:
+        position = pyautogui.position()
+        # ahk.right_click(cx + 15, cy + 25)
+        pyautogui.click(x = cx + 25, y = cy + 45, button='right')
+        pyautogui.moveTo(position, _pause=False)
+        # ahk.mouse_move(position)
+
+
+def PS():
+    cv.imshow("AimBot", output)
+
 # keyboard.add_hotkey('CapsLock', print, args = ('Hotkey', 'Detected')) 
-keyboard.add_hotkey('s', attackLowestHealthMinionOrEnemy, suppress=True)
+# keyboard.add_hotkey('s', attackLowestHealthMinionOrEnemy, suppress=True)
 # cv.waitKey(1000)
-keyboard.wait('ctrl + x')
+
+keyboard.add_hotkey('z', Overwatch, suppress=True)
+# keyboard.add_hotkey('z', lambda: Overwatch, suppress=True)
+lambda: keyboard.write('foobar')
+# keyboard.add_hotkey('x', PS, suppress=True)
+keyboard.wait('ctrl + c')
 
 # >>> import pyautogui
 

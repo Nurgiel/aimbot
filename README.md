@@ -13,6 +13,9 @@
   - `pip install Pillow --upgrade`
   - `pip install ahk`
   - `pip install keyboard`
+  - `pip install pynput`
 - Run Application
   - `export QT_DEBUG_PLUGINS=1` (Debug)
   - `python read.py`
+
+https://stackoverflow.com/questions/59191177/listen-for-a-shortcut-like-wina-even-if-the-python-script-does-not-have-the-f (focus)
